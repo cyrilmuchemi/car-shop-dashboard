@@ -5,27 +5,48 @@ const router = useRouter();
 const carName = ref("");
 const carNameErr = ref(false);
 const carNameMsg = ref("");
+const isCarNameValidated = ref(false);
 const carPrice = ref(0);
 const carPriceErr = ref(false);
 const carPriceMsg = ref("");
+const isCarPriceValidated = ref(false);
 const carModelYear = ref("");
 const carModelYearErr = ref(false);
 const carModelYearMsg = ref("");
+const isCarModelYearValidated = ref(false);
 const carImage = ref(null);
 const carImageErr = ref(false);
 const carImageMSg = ref("");
+const isCarImageValidated = ref(false);
+const carDescription = ref("");
+const carDescriptionErr = ref(false);
+const carDescriptionMsg = ref("");
+const isCarDescriptionValidated = ref(false);
+const resultSuccess = ref(false);
+const resultErr = ref(false);
+const resultSuccessMsg = ref("");
+const resultErrMsg = ref("");
+
 const goBack = () => {
   router.push({ name: "home" });
 };
-const validateCarName = () => {
-  if (!carName.value) {
+
+const validateCarName = (e) => {
+  let target = e.target.value;
+  validateCarNameInput(target);
+};
+
+const validateCarNameInput = (val) => {
+  if (val === "") {
     carNameErr.value = true;
-    carNameMsg.value = "Enter Car Name";
-  } else {
+    isCarNameValidated.value = false;
+    carNameMsg.value = "Must Enter Car Name";
+  } else if (val !== "") {
     carNameErr.value = false;
-    carNameMsg.value = "";
+    isCarNameValidated.value = true;
   }
 };
+
 const validateCarPrice = () => {
   if (!carName.value) {
     carPriceErr.value = true;
@@ -33,6 +54,7 @@ const validateCarPrice = () => {
   } else {
     carPriceErr.value = false;
     carPriceMsg.value = "";
+    isCarPriceValidated.value = true;
   }
 };
 const validateCarYear = () => {
@@ -42,6 +64,7 @@ const validateCarYear = () => {
   } else {
     carModelYearErr.value = false;
     carModelYearMsg.value = "";
+    isCarModelYearValidated.value = true;
   }
 };
 const validateCarImage = () => {
@@ -51,7 +74,52 @@ const validateCarImage = () => {
   } else {
     carImageErr.value = false;
     carImageMSg.value = "";
+    isCarImageValidated.value = true;
   }
+};
+const validateCarDescription = () => {
+  if (!carDescription.value) {
+    carDescriptionErr.value = true;
+    carDescriptionMsg.value = "Enter Car Description";
+  } else {
+    carDescriptionErr.value = false;
+    carDescriptionMsg.value = "";
+    isCarDescriptionValidated.value = true;
+  }
+};
+
+const addNewCar = () => {
+  if (
+    isCarImageValidated.value &&
+    isCarNameValidated &&
+    isCarPriceValidated &&
+    isCarModelYearValidated &&
+    isCarDescriptionValidated
+  ) {
+    resultSuccess.value = true;
+    resultSuccessMsg.value = "Validated Successfully";
+    resultErr.value = false;
+  } else {
+    resultErr.value = true;
+    resultErrMsg.value = "Validation Failed";
+  }
+};
+
+const resetFormError = () => {
+  carNameErr.value = false;
+  carNameMsg.value = "";
+  carPriceErr.value = false;
+  carPriceMsg.value = "";
+  carModelYearErr.value = false;
+  carModelYearMsg.value = "";
+  carImageErr.value = false;
+  carImageMSg.value = "";
+  carDescriptionErr.value = false;
+  carDescriptionMsg.value = "";
+  resultSuccess.value = false;
+  resultSuccessMsg.value = "";
+  resultErr.value = false;
+  resultErrMsg.value = "";
 };
 </script>
 
@@ -75,6 +143,7 @@ const validateCarImage = () => {
                 class="form-control w300 customFileField"
                 ref="carImage"
                 @input="validateCarImage"
+                @change="validateCarImage"
               />
               <label for="carShopImage">Car Image</label>
               <span class="error-feedback" v-if="carImageErr">
@@ -95,7 +164,8 @@ const validateCarImage = () => {
                 placeholder="Car Name"
                 class="form-control w300"
                 v-model.trim="carName"
-                @input="validateCarName"
+                @input="validateCarName($event)"
+                @change="validateCarName($event)"
               />
               <label for="carShopName">Car Name</label>
               <span class="error-feedback" v-if="carNameErr">
@@ -116,7 +186,8 @@ const validateCarImage = () => {
                 placeholder="Car Price"
                 class="form-control w300"
                 v-model.trim="carPrice"
-                @input="validateCarPrice"
+                @input="validateCarPrice($event)"
+                @change="validateCarPrice($event)"
               />
               <label for="carPrice">Car Price</label>
               <span class="error-feedback" v-if="carPriceErr">
@@ -137,7 +208,8 @@ const validateCarImage = () => {
                 placeholder="Car Price"
                 class="form-control w300"
                 v-model.trim="carModelYear"
-                @input="validateCarYear"
+                @input="validateCarYear($event)"
+                @change="validateCarYear($event)"
               />
               <label for="carPrice">Car Model Year</label>
               <span class="error-feedback" v-if="carModelYearErr">
@@ -157,6 +229,8 @@ const validateCarImage = () => {
                 placeholder="Car Description"
                 class="form-control w300 h125"
                 v-model.trim="carDescription"
+                @input="validateCarDescription($event)"
+                @change="validateCarDescription($event)"
               >
               </textarea>
               <label for="carShopDescription">Car Description</label>
@@ -164,6 +238,30 @@ const validateCarImage = () => {
                 {{ carDescriptionMsg }}
               </span>
             </div>
+          </div>
+        </div>
+        <div class="row d-grid gap-2 w300 col-auto d-block mx-auto">
+          <button class="btn btn-outline-success" @click.prevent="addNewCar()">
+            Add New Car
+          </button>
+          <button
+            type="reset"
+            @click="resetFormError()"
+            class="btn btn-outline-primary mb-3"
+          >
+            Reset
+          </button>
+        </div>
+        <div class="row d-grid gap-2 w300 col-auto d-block mx-auto mb-3">
+          <div
+            class="alert alert-success mb-3"
+            role="alert"
+            v-if="resultSuccess"
+          >
+            {{ resultSuccessMsg }}
+          </div>
+          <div class="alert alert-danger mb-3" role="alert" v-if="resultErr">
+            {{ resultErrMsg }}
           </div>
         </div>
       </form>
@@ -176,7 +274,7 @@ const validateCarImage = () => {
   width: 300px !important;
 }
 .h125 {
-  height: 125px;
+  height: 125px !important;
 }
 .form-data-error input,
 .form-data-error textarea {
