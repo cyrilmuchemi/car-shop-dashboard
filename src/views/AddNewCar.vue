@@ -1,3 +1,4 @@
+<!-- eslint-disable no-constant-condition -->
 <script setup>
 import { useRouter } from "vue-router";
 import { ref } from "vue";
@@ -41,32 +42,66 @@ const validateCarNameInput = (val) => {
     carNameErr.value = true;
     isCarNameValidated.value = false;
     carNameMsg.value = "Must Enter Car Name";
-  } else if (val !== "") {
+  } else {
     carNameErr.value = false;
     isCarNameValidated.value = true;
+    carNameMsg.value = "";
   }
 };
 
-const validateCarPrice = () => {
-  if (!carName.value) {
+const validateCarPrice = (e) => {
+  let val = e.target.value;
+  validateCarPriceInput(val);
+};
+
+const validateCarPriceInput = (val) => {
+  if (val === "") {
     carPriceErr.value = true;
-    carPriceMsg.value = "Enter Car Price";
+    isCarPriceValidated.value = false;
+    carPriceMsg.value = "Please Enter Car Price";
+  } else if (val !== "" && isNaN(val)) {
+    carPriceErr.value = true;
+    isCarPriceValidated.value = false;
+  } else if (val < 0) {
+    carPriceErr.value = true;
+    isCarPriceValidated.value = false;
+    carPriceMsg.value = "Car Price Cannot be negative";
+  } else if (val === 0 || val === 0.0) {
+    carPriceErr.value = true;
+    isCarPriceValidated.value = false;
+    carPriceMsg.value = "Car Price Cannot be Zero!";
   } else {
     carPriceErr.value = false;
-    carPriceMsg.value = "";
     isCarPriceValidated.value = true;
+    carPriceMsg.value = "";
   }
 };
-const validateCarYear = () => {
-  if (!carModelYear.value) {
+
+const validateCarYear = (e) => {
+  let val = e.target.value;
+  validateCarYearInput(val);
+};
+
+const validateCarYearInput = (val) => {
+  if (val === "") {
     carModelYearErr.value = true;
-    carModelYearMsg.value = "Enter Car Model Year";
+    isCarModelYearValidated.value = false;
+    carModelYearMsg.value = "Please Enter Car Model Year! Eg: 2016";
+  } else if (/^[0-9]+$/.test(val) === false) {
+    carModelYearErr.value = true;
+    isCarModelYearValidated.value = false;
+    carModelYearMsg.value = "Enter only Years";
+  } else if (val.length < 4 || val.length > 4) {
+    carModelYearErr.value = true;
+    isCarModelYearValidated.value = false;
+    carModelYearMsg.value = "Enter a valid year!";
   } else {
     carModelYearErr.value = false;
-    carModelYearMsg.value = "";
     isCarModelYearValidated.value = true;
+    carModelYearMsg.value = "";
   }
 };
+
 const validateCarImage = () => {
   if (!carImage.value) {
     carImageErr.value = true;
@@ -77,14 +112,24 @@ const validateCarImage = () => {
     isCarImageValidated.value = true;
   }
 };
-const validateCarDescription = () => {
-  if (!carDescription.value) {
+const validateCarDescription = (e) => {
+  const target = e.target.value;
+  validateCarDescriptionInput(target);
+};
+
+const validateCarDescriptionInput = (val) => {
+  if (val === "") {
     carDescriptionErr.value = true;
-    carDescriptionMsg.value = "Enter Car Description";
+    isCarDescriptionValidated.value = false;
+    carDescriptionMsg.value = "Please Enter Car Description";
+  } else if (val.length > 100) {
+    carDescriptionErr.value = true;
+    isCarDescriptionValidated.value = false;
+    carModelYearMsg.value = "Description must be short and precise!";
   } else {
     carDescriptionErr.value = false;
-    carDescriptionMsg.value = "";
     isCarDescriptionValidated.value = true;
+    carModelYearMsg.value = "";
   }
 };
 
@@ -102,6 +147,10 @@ const addNewCar = () => {
   } else {
     resultErr.value = true;
     resultErrMsg.value = "Validation Failed";
+    validateCarNameInput(carName.value);
+    validateCarPriceInput(carPrice.value);
+    validateCarYearInput(carModelYear.value);
+    validateCarDescriptionInput(carDescription.value);
   }
 };
 
