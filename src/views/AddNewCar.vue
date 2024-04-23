@@ -28,6 +28,7 @@ const resultSuccess = ref(false);
 const resultErr = ref(false);
 const resultSuccessMsg = ref("");
 const resultErrMsg = ref("");
+const Image = ref(null);
 
 const goBack = () => {
   router.push({ name: "home" });
@@ -121,6 +122,7 @@ const validateCarImage = () => {
       carImageErr.value = false;
       isCarImageValidated.value = true;
       carImageMSg.value = "";
+      createImage(carImage.value.files[0]);
     } else {
       carImageErr.value = true;
       isCarImageValidated.value = false;
@@ -198,6 +200,22 @@ onMounted(() => {
     console.log(carImage.value.files[0]);
   }
 });
+
+const createImage = (file) => {
+  const reader = new FileReader();
+  reader.onload = () => {
+    // Update the reactive variable holding the image source
+    Image.value = reader.result;
+  };
+  reader.readAsDataURL(file);
+};
+
+const removeImage = () => {
+  Image.value = "";
+  setTimeout(() => {
+    validateCarImage();
+  }, 500);
+};
 </script>
 
 <template>
@@ -212,6 +230,7 @@ onMounted(() => {
             <div
               class="form-floating"
               :class="{ 'form-data-error': carImageErr }"
+              v-if="!Image"
             >
               <input
                 type="file"
@@ -226,6 +245,16 @@ onMounted(() => {
               <span class="error-feedback" v-if="carImageErr">
                 {{ carImageMSg }}
               </span>
+            </div>
+            <div v-else>
+              <span>Upload Car Image: </span><br />
+              <img :src="Image" class="w150 rounded" /><br />
+              <button
+                class="btn btn-outline-danger my-2"
+                @click="removeImage()"
+              >
+                Remove Car Image
+              </button>
             </div>
           </div>
         </div>
@@ -349,6 +378,10 @@ onMounted(() => {
 <style scoped>
 .w300 {
   width: 300px !important;
+}
+
+.w150 {
+  width: 150px !important;
 }
 .h125 {
   height: 125px !important;
