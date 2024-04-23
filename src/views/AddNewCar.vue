@@ -2,6 +2,7 @@
 <script setup>
 import { useRouter } from "vue-router";
 import { ref } from "vue";
+import { onMounted } from "vue";
 const router = useRouter();
 const carName = ref("");
 const carNameErr = ref(false);
@@ -102,16 +103,36 @@ const validateCarYearInput = (val) => {
   }
 };
 
-const validateCarImage = () => {
-  if (!carImage.value) {
-    carImageErr.value = true;
-    carImageMSg.value = "Enter Car Imager";
+const validateFileExtension = (id) => {
+  let fileInput = document.getElementById(id);
+  let filePath = fileInput.value;
+  //Filtering through file types
+  let allowedExtensions = /(\.jpg|\.png|\.jpeg|\.gif)$/i;
+  if (!allowedExtensions.exec(filePath)) {
+    return false;
   } else {
-    carImageErr.value = false;
-    carImageMSg.value = "";
-    isCarImageValidated.value = true;
+    return true;
   }
 };
+
+const validateCarImage = () => {
+  if (carImage.value && carImage.value.files[0]) {
+    if (validateFileExtension("carShopImage")) {
+      carImageErr.value = false;
+      isCarImageValidated.value = true;
+      carImageMSg.value = "";
+    } else {
+      carImageErr.value = true;
+      isCarImageValidated.value = false;
+      carImageMSg.value = "Car Image must be: PNG, JPEG, JPG, or GIF";
+    }
+  } else {
+    carImageErr.value = true;
+    isCarImageValidated.value = false;
+    carImageMSg.value = "Please select an Image!";
+  }
+};
+
 const validateCarDescription = (e) => {
   const target = e.target.value;
   validateCarDescriptionInput(target);
@@ -151,6 +172,7 @@ const addNewCar = () => {
     validateCarPriceInput(carPrice.value);
     validateCarYearInput(carModelYear.value);
     validateCarDescriptionInput(carDescription.value);
+    validateCarImage();
   }
 };
 
@@ -170,6 +192,12 @@ const resetFormError = () => {
   resultErr.value = false;
   resultErrMsg.value = "";
 };
+
+onMounted(() => {
+  if (carImage.value && carImage.value.files[0]) {
+    console.log(carImage.value.files[0]);
+  }
+});
 </script>
 
 <template>
