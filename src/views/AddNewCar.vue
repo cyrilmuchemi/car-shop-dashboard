@@ -159,14 +159,36 @@ const validateCarDescriptionInput = (val) => {
 const addNewCar = () => {
   if (
     isCarImageValidated.value &&
-    isCarNameValidated &&
-    isCarPriceValidated &&
-    isCarModelYearValidated &&
-    isCarDescriptionValidated
+    isCarNameValidated.value &&
+    isCarPriceValidated.value &&
+    isCarModelYearValidated.value &&
+    isCarDescriptionValidated.value
   ) {
     resultSuccess.value = true;
     resultSuccessMsg.value = "Validated Successfully";
     resultErr.value = false;
+    resultErrMsg.value = "";
+
+    let form_data = new FormData();
+    form_data.append("name", carName.value);
+    form_data.append("price", carPrice.value);
+    form_data.append("description", carDescription.value);
+    form_data.append("yearModel", carModelYear.value);
+
+    // Check if carImage.value is not null before accessing files
+    if (carImage.value && carImage.value.files[0]) {
+      form_data.append("image", carImage.value.files[0]);
+    }
+
+    // Print form data in console
+    for (let pair of form_data.entries()) {
+      console.log(pair[0] + ", " + pair[1]);
+    }
+
+    // Send form data via XHR
+    let xhr = new XMLHttpRequest();
+    xhr.open("POST", "http://localhost:8080/add/new-car", true);
+    xhr.send(form_data);
   } else {
     resultErr.value = true;
     resultErrMsg.value = "Validation Failed";
