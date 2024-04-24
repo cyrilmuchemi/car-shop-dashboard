@@ -1,8 +1,7 @@
-<!-- eslint-disable no-constant-condition -->
 <script setup>
 import { useRouter } from "vue-router";
 import { ref } from "vue";
-import { onMounted } from "vue";
+import axios from "axios";
 const router = useRouter();
 const carName = ref("");
 const carNameErr = ref(false);
@@ -28,7 +27,7 @@ const resultSuccess = ref(false);
 const resultErr = ref(false);
 const resultSuccessMsg = ref("");
 const resultErrMsg = ref("");
-const Image = ref(null);
+const Image = ref("");
 
 const goBack = () => {
   router.push({ name: "home" });
@@ -104,37 +103,6 @@ const validateCarYearInput = (val) => {
   }
 };
 
-const validateFileExtension = (id) => {
-  let fileInput = document.getElementById(id);
-  let filePath = fileInput.value;
-  //Filtering through file types
-  let allowedExtensions = /(\.jpg|\.png|\.jpeg|\.gif)$/i;
-  if (!allowedExtensions.exec(filePath)) {
-    return false;
-  } else {
-    return true;
-  }
-};
-
-const validateCarImage = () => {
-  if (carImage.value && carImage.value.files[0]) {
-    if (validateFileExtension("carShopImage")) {
-      carImageErr.value = false;
-      isCarImageValidated.value = true;
-      carImageMSg.value = "";
-      createImage(carImage.value.files[0]);
-    } else {
-      carImageErr.value = true;
-      isCarImageValidated.value = false;
-      carImageMSg.value = "Car Image must be: PNG, JPEG, JPG, or GIF";
-    }
-  } else {
-    carImageErr.value = true;
-    isCarImageValidated.value = false;
-    carImageMSg.value = "Please select an Image!";
-  }
-};
-
 const validateCarDescription = (e) => {
   const target = e.target.value;
   validateCarDescriptionInput(target);
@@ -148,15 +116,59 @@ const validateCarDescriptionInput = (val) => {
   } else if (val.length > 100) {
     carDescriptionErr.value = true;
     isCarDescriptionValidated.value = false;
-    carModelYearMsg.value = "Description must be short and precise!";
+    carDescriptionMsg.value = "Description must be short and precise!";
   } else {
     carDescriptionErr.value = false;
     isCarDescriptionValidated.value = true;
-    carModelYearMsg.value = "";
+    carDescriptionMsg.value = "";
   }
 };
 
-const addNewCar = () => {
+const validateFileExtension = (id) => {
+  let fileInput = document.getElementById(id);
+  let filePath = fileInput.value;
+  //Filtering through file types
+  let allowedExtensions = /(\.jpg|\.png|\.jpeg|\.gif)$/i;
+  if (!allowedExtensions.exec(filePath)) {
+    return false;
+  } else {
+    return true;
+  }
+};
+
+const createImage = (file) => {
+  const reader = new FileReader();
+  reader.onload = () => {
+    // Update the reactive variable holding the image source
+    Image.value = reader.result;
+  };
+  reader.readAsDataURL(file);
+};
+
+const validateCarImage = () => {
+  const fileInput = carImage.value;
+  const file = fileInput.files[0]; // Get the first file from the input
+
+  if (file) {
+    if (validateFileExtension("carShopImage")) {
+      carImageErr.value = false;
+      isCarImageValidated.value = true;
+      carImageMSg.value = "";
+      createImage(file);
+      console.log("Selected file:", file);
+    } else {
+      carImageErr.value = true;
+      isCarImageValidated.value = false;
+      carImageMSg.value = "Car Image must be: PNG, JPEG, JPG, or GIF";
+    }
+  } else {
+    carImageErr.value = true;
+    isCarImageValidated.value = false;
+    carImageMSg.value = "Please select an Image!";
+  }
+};
+
+const addNewCar = async () => {
   if (
     isCarImageValidated.value &&
     isCarNameValidated.value &&
@@ -175,20 +187,28 @@ const addNewCar = () => {
     form_data.append("description", carDescription.value);
     form_data.append("yearModel", carModelYear.value);
 
-    // Check if carImage.value is not null before accessing files
-    if (carImage.value && carImage.value.files[0]) {
-      form_data.append("image", carImage.value.files[0]);
+    // Check if the preview image is not empty before appending
+    if (Image.value) {
+      const file = dataURLtoFile(Image.value, "image.jpg"); // Convert the data URL to a File object
+      form_data.append("image", file);
+    } else {
+      resultErr.value = true;
+      resultErrMsg.value = "Please select a valid image!";
+      console.error("Error: No preview image selected");
+      return;
     }
 
-    // Print form data in console
-    for (let pair of form_data.entries()) {
-      console.log(pair[0] + ", " + pair[1]);
+    try {
+      let response = await axios.post(
+        `http://localhost/car-shop-dashboard/src/api/cars.php?action=update`,
+        form_data
+      );
+      console.log(response.data);
+    } catch (error) {
+      console.error("Error occurred while sending data:", error);
+      resultErr.value = true;
+      resultErrMsg.value = "Error occurred while sending data!";
     }
-
-    // Send form data via XHR
-    let xhr = new XMLHttpRequest();
-    xhr.open("POST", "http://localhost:8080/add/new-car", true);
-    xhr.send(form_data);
   } else {
     resultErr.value = true;
     resultErrMsg.value = "Validation Failed";
@@ -197,7 +217,25 @@ const addNewCar = () => {
     validateCarYearInput(carModelYear.value);
     validateCarDescriptionInput(carDescription.value);
     validateCarImage();
+    console.log(
+      carName.value,
+      Image.value,
+      carDescription.value,
+      carModelYear,
+      carPrice.value
+    );
   }
+};
+const dataURLtoFile = (dataURL, filename) => {
+  const arr = dataURL.split(",");
+  const mime = arr[0].match(/:(.*?);/)[1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new File([u8arr], filename, { type: mime });
 };
 
 const resetFormError = () => {
@@ -215,21 +253,6 @@ const resetFormError = () => {
   resultSuccessMsg.value = "";
   resultErr.value = false;
   resultErrMsg.value = "";
-};
-
-onMounted(() => {
-  if (carImage.value && carImage.value.files[0]) {
-    console.log(carImage.value.files[0]);
-  }
-});
-
-const createImage = (file) => {
-  const reader = new FileReader();
-  reader.onload = () => {
-    // Update the reactive variable holding the image source
-    Image.value = reader.result;
-  };
-  reader.readAsDataURL(file);
 };
 
 const removeImage = () => {
@@ -257,10 +280,10 @@ const removeImage = () => {
               <input
                 type="file"
                 id="carShopImage"
+                :v-model="carImage"
                 placeholder="Car Image"
                 class="form-control w300 customFileField"
                 ref="carImage"
-                @input="validateCarImage"
                 @change="validateCarImage"
               />
               <label for="carShopImage">Car Image</label>

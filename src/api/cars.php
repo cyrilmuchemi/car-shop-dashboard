@@ -25,6 +25,81 @@ if($mysqli->connect_errno)
     ];
 }
 
-$mysqli->close();
+$action = "";
+
+if(isset($_GET["action"]))
+{
+    $action = $_GET["action"];
+}
+
+function generateRandomString($length = 10)
+{
+    $characters = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLNOPQRSTUVWXYZ";
+    $characters_length = strlen($characters);
+    $random_string = "";
+    for($i = 0; $i < $length; $i++)
+    {
+        $random_string .= $characters[rand(0, $characters_length - 1)];
+    }
+
+    return $random_string;
+}
+//CRUD
+if($action == "read")
+{
+    $results["calling_read"] = true;
+}
+
+if($action == "update")
+{
+   //files
+   $img_name = "";
+   $upload_path = "";
+
+   if(isset($_FILES["image"]["name"]))
+   {
+        $img_name = $_FILES["image"]["name"];
+        $valid_extensions = array("png", "jpeg", "jpg", "gif");
+        $extensions = pathinfo($img_name, PATHINFO_EXTENSION);
+        if(in_array($extensions, $valid_extensions))
+        {
+            $new_generated_id = generateRandomString(75);
+            $upload_path = '../assets/cars/' . $new_generated_id . "." . $extensions;
+
+            if(file_exists($upload_path))
+            {
+                $new_generated_id = generateRandomString(75);
+                $img_name = $new_generated_id . "." . $extensions;
+            }else{
+                $img_name = $new_generated_id . "." . $extensions;
+            }
+        }else{
+            $results["error"] = true;
+            $results["message"] = "Car Image must be: PNG, JPEG, JPG, or GIF";
+        }
+   } else{
+        $results["error"] = true;
+        $results["message"] = "Please Select a Car Image";
+   }
+   $results["newImageUploaded"] = $img_name;
+
+   if($img_name != "" && $upload_path != "")
+   {
+        $name = $_POST["name"];
+        $price = $_POST["price"];
+        $description = $_POST["description"];
+        $yearModel = $_POST["yearModel"];
+
+        if(move_uploaded_file($_FILES["image"]["tmp_name"], $upload_path))
+        {
+            $results["added_new_car"] = true;
+            
+        }else {
+            $results["error"] = true;
+            $results["message"] = "Failed saving the car image";
+        }
+   }
+}
 
 echo json_encode($results);
+$mysqli->close();
