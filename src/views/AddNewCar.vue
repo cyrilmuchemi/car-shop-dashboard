@@ -176,16 +176,11 @@ const addNewCar = async () => {
     isCarModelYearValidated.value &&
     isCarDescriptionValidated.value
   ) {
-    resultSuccess.value = true;
-    resultSuccessMsg.value = "Validated Successfully";
-    resultErr.value = false;
-    resultErrMsg.value = "";
-
     let form_data = new FormData();
     form_data.append("name", carName.value);
     form_data.append("price", carPrice.value);
     form_data.append("description", carDescription.value);
-    form_data.append("yearModel", carModelYear.value);
+    form_data.append("modelYear", carModelYear.value);
 
     // Check if the preview image is not empty before appending
     if (Image.value) {
@@ -203,7 +198,19 @@ const addNewCar = async () => {
         `http://localhost/car-shop-dashboard/src/api/cars.php?action=update`,
         form_data
       );
-      console.log(response.data);
+      console.log(response);
+      const resultData = response.data;
+      if (response.status === 200) {
+        if (resultData.error) {
+          resultSuccessMsg.value = "";
+          resultErrMsg.value = resultData.message;
+          resultErr.value = true;
+        } else {
+          resultErrMsg.value = "";
+          resultSuccessMsg.value = resultData.message;
+          resultSuccess.value = true;
+        }
+      }
     } catch (error) {
       console.error("Error occurred while sending data:", error);
       resultErr.value = true;

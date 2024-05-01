@@ -88,15 +88,33 @@ if($action == "update")
         $name = $_POST["name"];
         $price = $_POST["price"];
         $description = $_POST["description"];
-        $yearModel = $_POST["yearModel"];
+        $modelYear = $_POST["modelYear"];
 
         if(move_uploaded_file($_FILES["image"]["tmp_name"], $upload_path))
         {
             $results["added_new_car"] = true;
+            //insert into database
+            $sql = mysql_query("insert into `car` 
+            (name, price, description, image, modelYear) 
+            values 
+            ('$name', '$price', '$description', '$img_name', '$modelYear') ");
+
+            if($sql) 
+            {
+                $results["error"] = false;
+                $results["message"] = "Added New Car Successfully!";
+                $results["added_data"] = true;
+
+            }else{
+                $results["error"] = true;
+                $results["message"] = "Failed Saving the Car";
+                $results["added_new_car"] = false;
+            }
             
         }else {
             $results["error"] = true;
             $results["message"] = "Failed saving the car image";
+            $results["added_new_car"] = false;
         }
    }
 }
